@@ -1,5 +1,4 @@
 
-import torch
 import json
 import os
 import WordMatching as wm
@@ -9,15 +8,14 @@ import base64
 import time
 import audioread
 import numpy as np
-from torchaudio.transforms import Resample
+from scipy import signal as scipy_signal
 import io
 import tempfile
 
+# Initialize trainers with OpenAI Whisper API
 trainer_SST_lambda = {}
 trainer_SST_lambda['de'] = pronunciationTrainer.getTrainer("de")
 trainer_SST_lambda['en'] = pronunciationTrainer.getTrainer("en")
-
-transform = Resample(orig_freq=48000, new_freq=16000)
 
 
 def lambda_handler(event, context):
@@ -56,7 +54,14 @@ def lambda_handler(event, context):
 
         os.remove(tmp_name)
 
-    signal = transform(torch.Tensor(signal)).unsqueeze(0)
+    # Resample audio from 48kHz to 16kHz using scipy (no PyTorch needed)
+    if fs != 16000:
+        target_length = int(len(signal) * 16000 / fs)
+        signal = scipy_signal.resample(signal, target_length)
+    
+    # Ensure audio is in correct shape (1, samples) for compatibility
+    if signal.ndim == 1:
+        signal = signal[np.newaxis, :]
 
     result = trainer_SST_lambda[language].processAudioForGivenText(
         signal, real_text)

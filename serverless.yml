@@ -1,0 +1,164 @@
+service: pronunciation-trainer
+
+provider:
+    name: aws
+    runtime: python3.11
+    stage: ${opt:stage, 'prod'}
+    region: ${opt:region, 'us-east-1'}
+    memorySize: 1024
+    timeout: 30
+
+  # Environment variables
+  environment:
+    USE_API_ASR: true
+    WHISPER_API_KEY: ${env:WHISPER_API_KEY}
+
+    # IAM permissions
+    iam:
+        role:
+            statements:
+                - Effect: Allow
+                  Action:
+                      - logs:CreateLogGroup
+                      - logs:CreateLogStream
+                      - logs:PutLogEvents
+                  Resource: '*'
+
+    # Log retention
+    logRetentionInDays: 7
+
+    # API Gateway configuration
+    apiGateway:
+        shouldStartNameWithService: true
+
+functions:
+    speechToScore:
+        handler: lambdaSpeechToScore.lambda_handler
+        description: Evaluates pronunciation accuracy from recorded audio
+        events:
+            - http:
+                  path: GetAccuracyFromRecordedAudio
+                  method: post
+                  cors:
+                      origin: '*'
+                      headers:
+                          - Content-Type
+                          - X-Amz-Date
+                          - Authorization
+                          - X-Api-Key
+                          - X-Amz-Security-Token
+                      allowCredentials: true
+        tags:
+            Application: PronunciationTrainer
+            Component: SpeechEvaluation
+
+# Plugins
+plugins:
+    - serverless-python-requirements
+    - serverless-plugin-warmup
+
+# Custom configuration
+custom:
+    # Python requirements
+    pythonRequirements:
+        dockerizePip: true
+        zip: true
+        slim: true
+        strip: false
+        layer: false
+        useDownloadCache: true
+        useStaticCache: true
+        pipCmdExtraArgs:
+            - --no-cache-dir
+
+    # Warmup configuration (optional, prevents cold starts)
+    warmup:
+        default:
+            enabled: true
+            events:
+                - schedule: rate(5 minutes)
+            concurrency: 1
+
+# Package configuration
+package:
+    individually: false
+    patterns:
+        - '!.git/**'
+        - '!.vscode/**'
+        - '!.pytest_cache/**'
+        - '!__pycache__/**'
+        - '!*.pyc'
+        - '!node_modules/**'
+        - '!venv/**'
+        - '!env/**'
+        - '!.env'
+        - '!tests/**'
+        - '!*.md'
+        - '!images/**'
+        - '!static/**'
+        - '!templates/**'
+        - 'lambdaSpeechToScore.py'
+        - 'pronunciationTrainer.py'
+        - 'models.py'
+        - 'whisper_api_wrapper.py'
+        - 'ModelInterfaces.py'
+        - 'RuleBasedModels.py'
+        - 'WordMatching.py'
+        - 'WordMetrics.py'
+        - 'utilsFileIO.py'
+        - 'AIModels.py'
+        - 'databases/**'
+
+# Resources (CloudWatch alarms)
+resources:
+    Resources:
+        # Error alarm
+        SpeechToScoreFunctionErrorAlarm:
+            Type: AWS::CloudWatch::Alarm
+            Properties:
+                AlarmDescription: Alert when Lambda function errors exceed threshold
+                MetricName: Errors
+                Namespace: AWS/Lambda
+                Statistic: Sum
+                Period: 300
+                EvaluationPeriods: 1
+                Threshold: 5
+                ComparisonOperator: GreaterThanThreshold
+                Dimensions:
+                    - Name: FunctionName
+                      Value:
+                          Ref: SpeechToScoreLambdaFunction
+
+        # Throttle alarm
+        SpeechToScoreFunctionThrottleAlarm:
+            Type: AWS::CloudWatch::Alarm
+            Properties:
+                AlarmDescription: Alert when Lambda function is throttled
+                MetricName: Throttles
+                Namespace: AWS/Lambda
+                Statistic: Sum
+                Period: 300
+                EvaluationPeriods: 1
+                Threshold: 1
+                ComparisonOperator: GreaterThanThreshold
+                Dimensions:
+                    - Name: FunctionName
+                      Value:
+                          Ref: SpeechToScoreLambdaFunction
+
+    # Outputs
+    Outputs:
+        ApiUrl:
+            Description: API Gateway endpoint URL
+            Value:
+                Fn::Join:
+                    - ''
+                    - - 'https://'
+                      - Ref: ApiGatewayRestApi
+                      - '.execute-api.'
+                      - Ref: AWS::Region
+                      - '.amazonaws.com/'
+                      - ${self:provider.stage}
+                      - '/'
+            Export:
+                Name: ${self:service}-${self:provider.stage}-ApiUrl
