@@ -2,15 +2,15 @@
 import json
 import os
 import WordMatching as wm
-import utilsFileIO
 import pronunciationTrainer
 import base64
 import time
-import audioread
+import soundfile as sf
 import numpy as np
 from scipy import signal as scipy_signal
 import io
 import tempfile
+import audioread
 
 # Initialize trainers with OpenAI Whisper API
 trainer_SST_lambda = {}
@@ -58,7 +58,7 @@ def lambda_handler(event, context):
     if fs != 16000:
         target_length = int(len(signal) * 16000 / fs)
         signal = scipy_signal.resample(signal, target_length)
-    
+
     # Ensure audio is in correct shape (1, samples) for compatibility
     if signal.ndim == 1:
         signal = signal[np.newaxis, :]
@@ -107,8 +107,6 @@ def lambda_handler(event, context):
            'is_letter_correct_all_words': is_letter_correct_all_words}
 
     return json.dumps(res)
-
-
 
 
 def audioread_load(path, offset=0.0, duration=None, dtype=np.float32):

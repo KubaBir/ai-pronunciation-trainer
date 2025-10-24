@@ -8,7 +8,7 @@ provider:
     memorySize: 1024
     timeout: 30
 
-  # Environment variables
+#   Environment variables
   environment:
     USE_API_ASR: true
     WHISPER_API_KEY: ${env:WHISPER_API_KEY}
@@ -35,6 +35,12 @@ functions:
     speechToScore:
         handler: lambdaSpeechToScore.lambda_handler
         description: Evaluates pronunciation accuracy from recorded audio
+        layers:
+            # Public ffmpeg layer - replace ARN based on your region
+            # us-east-1: arn:aws:lambda:us-east-1:145266761615:layer:ffmpeg:4
+            # us-west-2: arn:aws:lambda:us-west-2:145266761615:layer:ffmpeg:4
+            # eu-west-1: arn:aws:lambda:eu-west-1:145266761615:layer:ffmpeg:4
+            - arn:aws:lambda:${self:provider.region}:145266761615:layer:ffmpeg:4
         events:
             - http:
                   path: GetAccuracyFromRecordedAudio
@@ -105,8 +111,6 @@ package:
         - 'RuleBasedModels.py'
         - 'WordMatching.py'
         - 'WordMetrics.py'
-        - 'utilsFileIO.py'
-        - 'AIModels.py'
         - 'databases/**'
 
 # Resources (CloudWatch alarms)

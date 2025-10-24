@@ -22,34 +22,3 @@ flask_cors
 
 # Environment variable loading (for local development)
 python-dotenv
-
-# Optional: Database support
-sqlalchemy
-
-# ==============================================================================
-# LEGACY DEPENDENCIES - Only needed if NOT using API-based models
-# Uncomment if you need to run locally with PyTorch models
-# ==============================================================================
-# -f https://download.pytorch.org/whl/torch_stable.html
-# torch 
-# torchaudio 
-# transformers
-# sentencepiece
-# omegaconf
-
-# ==============================================================================
-# NOTES FOR SERVERLESS DEPLOYMENT:
-# ==============================================================================
-# 1. This lightweight configuration is optimized for AWS Lambda
-# 2. Total package size: ~30-50MB (zipped)
-# 3. Cold start time: 1-3 seconds
-# 4. Memory requirements: 512MB-1GB
-#
-# Required environment variables:
-# - WHISPER_API_KEY: Your OpenAI API key
-# - USE_API_ASR: 'true' (default) or 'false'
-#
-# OpenAI Whisper API:
-# - Get key at: https://platform.openai.com/api-keys
-# - Cost: $0.006 per minute of audio
-# - For 10,000 requests (5,000 mins): ~$30/month API + ~$3/month Lambda = $33/month

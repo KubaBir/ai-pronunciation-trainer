@@ -6,7 +6,7 @@ Globals:
     Function:
         Timeout: 30
         MemorySize: 1024
-        Runtime: python3.11
+        Runtime: python3.12
         Environment:
             Variables:
                 USE_API_ASR: true
@@ -47,10 +47,13 @@ Resources:
             CodeUri: .
             Handler: lambdaSpeechToScore.lambda_handler
             Description: Evaluates pronunciation accuracy from recorded audio using OpenAI Whisper API
+            Layers:
+                - !Sub 'arn:aws:lambda:${AWS::Region}:145266761615:layer:ffmpeg:4'
             Environment:
                 Variables:
                     USE_API_ASR: true
                     WHISPER_API_KEY: !Ref WhisperApiKey
+                    OPENAI_API_BASE: !Ref OpenaiApiBase
             Events:
                 ApiEvent:
                     Type: Api

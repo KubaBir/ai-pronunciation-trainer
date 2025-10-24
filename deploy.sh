@@ -39,6 +39,13 @@ if [ -z "$WHISPER_API_KEY" ]; then
         echo "❌ API key cannot be empty. Exiting."
         exit 1
     fi
+
+    read -p "Enter your OpenAI API base: " OPENAI_API_BASE
+    
+    if [ -z "$OPENAI_API_BASE" ]; then
+        echo "❌ API base cannot be empty. Exiting."
+        exit 1
+    fi
 else
     echo "✅ Using OpenAI API key from environment"
 fi
@@ -73,7 +80,8 @@ read -p "Press Enter to continue with deployment..."
 sam deploy \
     --guided \
     --parameter-overrides \
-        WhisperApiKey="$WHISPER_API_KEY"
+        WhisperApiKey="$WHISPER_API_KEY" \
+        OpenaiApiBase="$OPENAI_API_BASE"
 
 if [ $? -eq 0 ]; then
     echo ""

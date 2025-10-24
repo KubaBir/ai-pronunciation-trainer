@@ -1,20 +1,19 @@
 from ModelInterfaces import IASRModel
 
+
 def getASRModel(language: str, use_whisper: bool = True, use_api: bool = True) -> IASRModel:
     """
     Get ASR model for speech recognition using OpenAI Whisper API.
-    
+
     Args:
         language: Language code ('de', 'en', 'fr') - used for reference only
         use_whisper: Always True (kept for backward compatibility)
         use_api: Always True (kept for backward compatibility)
-    
+
     Returns:
         WhisperAPIModel instance
     """
     # Always use OpenAI Whisper API
-
-    
     from whisper_api_wrapper import WhisperAPIModel
     return WhisperAPIModel()
 
