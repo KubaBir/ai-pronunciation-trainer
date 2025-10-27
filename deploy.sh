@@ -78,7 +78,6 @@ echo ""
 read -p "Press Enter to continue with deployment..."
 
 sam deploy \
-    --guided \
     --parameter-overrides \
         WhisperApiKey="$WHISPER_API_KEY" \
         OpenaiApiBase="$OPENAI_API_BASE"

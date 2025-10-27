@@ -8,7 +8,6 @@ import ModelInterfaces as mi
 import RuleBasedModels
 from string import punctuation
 import time
-import os
 
 
 def getTrainer(language: str, use_api: bool = None):
